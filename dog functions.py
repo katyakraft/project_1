@@ -7,7 +7,7 @@ pd.set_option('display.max_rows', None)
 """ Functions for data collection"""
 
 def get_breed_data():
-""" This function calls the DogAPI and retrieves characteristics of each breed: name, life span, temperament, breed group, weight, height, bred for and origin"""
+    """ This function calls the DogAPI and retrieves characteristics of each breed: name, life span, temperament, breed group, weight, height, bred for and origin"""
     # Initialize an empty list to store breed data
     breed_list = []
 
@@ -42,7 +42,7 @@ def get_breed_data():
 
 
 def count_characteristics(df_breeds):
-""" This function picks the 5 most popular characteristics of dog breeds """    
+    """ This function picks the 5 most popular characteristics of dog breeds """    
     # Combine all characteristics into a single list
     all_characteristics = []
     for characteristics in df_breeds["Temperament"]:  
@@ -59,7 +59,7 @@ def count_characteristics(df_breeds):
     return result_df
 
 def add_columns(df_breeds):
-""" This function adds new columns with boolean values of the 5 most popular characteristics """    
+    """ This function adds new columns with boolean values of the 5 most popular characteristics """    
 
     for characteristic in result_characteristics:
         df_breeds['characteristic'] = df_breeds['Temperament'].str.contains("characteristic")
