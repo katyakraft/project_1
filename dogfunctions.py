@@ -2,14 +2,15 @@
 import requests
 import pandas as pd
 from collections import Counter
-pd.set_option('display.max_rows', None)
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 import seaborn.objects as so
 import re
+colors = sns.color_palette('Set2')
 
-""" ---Functions for data collection--- """
+#Functions for data collection
 
 def get_breed_data():
     """ This function calls the DogAPI and retrieves characteristics of each breed: name, life span, temperament, breed group, weight, height, bred for and origin"""
@@ -51,6 +52,7 @@ def count_characteristics(df_breeds):
     # Combine all characteristics into a single list
     all_characteristics = []
     for characteristics in df_breeds["temperament"]:  
+    
         if isinstance(characteristics, str):
             all_characteristics.extend(characteristics.split(', '))
     
@@ -73,10 +75,10 @@ def add_columns(df_breeds, result_characteristics):
     return df_breeds
 
 
-""" ---Functions for data cleaning--- """
+#Functions for data cleaning
 
 def breed_groups(breedname):
-    
+    """ This function cleans the values of breed names"""
     if re.search(r'pit bull|pitbull', breedname):  
         return 'pitbull'
     elif re.search(r'chihuahua', breedname): 
@@ -171,34 +173,31 @@ def breed_groups(breedname):
         return 'chow chow'
     else:
        pass 
+
+# Functions for dog traits
+
+def plot_radar(df_popular_names, name):
+    """ This function creates plot radar with traits for a given name"""
+    categories = ['intelligent', 'affectionate', 'alert', 'friendly', 'loyal']
+    values = df_popular_names[df_popular_names['animal_name'] == name][categories].mean().values.flatten()
+
+    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+    values = np.concatenate((values, [values[0]]))
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    ax.fill(angles, values, color='blue', alpha=0.25)
+    ax.plot(angles, values, color='blue', linewidth=2)
+    ax.set_yticklabels([])
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories)
+    plt.title(f'Trait Profile for {name.capitalize()}')
+    plt.show()
         
-""" --- Name popularity over time --- """
+# Functions for name popularity over time
 
-def top_10_names():
-top_names = merged_df['animal_name'].value_counts().head(10)
-
-# Step 2: Create a bar plot
-plt.figure(figsize=(12, 6))
-sns.barplot(x=top_names.index, y=top_names.values, palette='Set2')
-
-# Step 3: Add title and labels
-plt.title('Top 10 Dog Names in NYC')
-plt.xlabel('Dog Names')
-plt.ylabel('Number of Dogs')
-
-# Step 4: Rotate x labels for better readability
-plt.xticks(rotation=45)
-
-# Step 5: Use tight layout for better spacing
-plt.tight_layout()
-
-# Show the plot
-plt.show()
-
-
-def popularity_overtime():
-
-    top_names = ["Bella", "Max", "Charlie", "Luna", "Coco"] 
+def popularity_overtime(merged_df,top_names):
+    """ This function prints a graph to show normalized popularity of top names over time"""
     #remove invalid birth years 
     merged_df['animal_birthyear'] = pd.to_numeric(merged_df['animal_birthyear'], errors='coerce')
     #create a copy with valid birth years
@@ -233,15 +232,15 @@ def popularity_overtime():
     plt.tight_layout()
     plt.show()
 
-def top_increased_popularity:
+def top_increased_popularity(only_with_birthyear_df):
 
-    """ Makes a graph showing names that gained the most % of popularity in a specific year """
+    """ This function makes a graph showing names that gained the most % of popularity in a specific year """
     # Define the names to exclude
     names_to_exclude = ['name', 'dachshund', 'unknow', 'unknown', 'none', 'unkown'] 
-    merged_df_with_birth_year['animal_birthyear'] = merged_df_with_birth_year['animal_birthyear'].astype(int)
+    only_with_birthyear_df['animal_birthyear'] = only_with_birthyear_df['animal_birthyear'].astype(int)
 
     # Step 1: Calculate the total count of each name per year
-    name_counts = merged_df_with_birth_year.groupby(['animal_birthyear', 'animal_name']).size().reset_index(name='count')
+    name_counts = only_with_birthyear_df.groupby(['animal_birthyear', 'animal_name']).size().reset_index(name='count')
 
     # Step 2: Exclude specific names
     name_counts = name_counts[~name_counts['animal_name'].isin(names_to_exclude)]
@@ -258,16 +257,17 @@ def top_increased_popularity:
     # Step 6: Create a bar graph
     plt.figure(figsize=(12, 6))
     plt.barh(top_increases['animal_name'] + " (" + top_increases['animal_birthyear'].astype(str) + ")", 
-         top_increases['percentage_change'] * 100, color='skyblue')
+         top_increases['percentage_change'] * 100, color=colors)
     plt.xlabel('Percentage Increase in Popularity (%)')
     plt.title('Top 10 Most Increased Popularity of Animal Names')
-    plt.axvline(0, color='gray', linestyle='--')
+    plt.axvline(0, color=colors, linestyle='--')
     plt.show()
 
 
-""" --- Gender neutral names  --- """
+# Functions for gender neutral names
 
-def gender_natural_names():
+def gender_natural_names(merged_df):
+    """ This function looks for gender neutral names and print a graph to display them"""
 
     # Group by 'animal_name' and 'animal_gender', count occurrences, drop "Dachshund" as name
 
@@ -300,7 +300,7 @@ def gender_natural_names():
     top_gender_neutral_names
 
     #Make the graph
-    colors = sns.color_palette('Set2', len(top_increases))
+    colors = sns.color_palette('Set2')
     top_gender_neutral_names[['f', 'm']].plot(kind='bar', figsize=(10, 6), color=colors)
     plt.title('Top 10 Gender-Neutral Dog Names')
     plt.xlabel('Dog Names')
@@ -310,9 +310,10 @@ def gender_natural_names():
     plt.tight_layout()
     plt.show()
 
-""" --- Colleration name/weight --- """
+# Functions for correlation between weight and name
 
-def name_vs_weight():
+def name_vs_weight(merged_df):
+    """ This function checks the correlation between name and weight bucket and prints a graph """
     #Exclude Name from names
     merged_df = merged_df[merged_df['animal_name'] != "Name"]
     
