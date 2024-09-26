@@ -74,6 +74,7 @@ def add_columns(df_breeds, result_characteristics):
 
 
 """ ---Functions for data cleaning--- """
+
 def breed_groups(breedname):
     
     if re.search(r'pit bull|pitbull', breedname):  
@@ -173,9 +174,31 @@ def breed_groups(breedname):
         
 """ --- Name popularity over time --- """
 
-def popularity_overtime()
+def top_10_names():
+top_names = merged_df['animal_name'].value_counts().head(10)
 
-    top_names = ["bella", "max", "charlie", "luna", "coco"]
+# Step 2: Create a bar plot
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_names.index, y=top_names.values, palette='Set2')
+
+# Step 3: Add title and labels
+plt.title('Top 10 Dog Names in NYC')
+plt.xlabel('Dog Names')
+plt.ylabel('Number of Dogs')
+
+# Step 4: Rotate x labels for better readability
+plt.xticks(rotation=45)
+
+# Step 5: Use tight layout for better spacing
+plt.tight_layout()
+
+# Show the plot
+plt.show()
+
+
+def popularity_overtime():
+
+    top_names = ["Bella", "Max", "Charlie", "Luna", "Coco"] 
     #remove invalid birth years 
     merged_df['animal_birthyear'] = pd.to_numeric(merged_df['animal_birthyear'], errors='coerce')
     #create a copy with valid birth years
@@ -210,3 +233,127 @@ def popularity_overtime()
     plt.tight_layout()
     plt.show()
 
+def top_increased_popularity:
+
+    """ Makes a graph showing names that gained the most % of popularity in a specific year """
+    # Define the names to exclude
+    names_to_exclude = ['name', 'dachshund', 'unknow', 'unknown', 'none', 'unkown'] 
+    merged_df_with_birth_year['animal_birthyear'] = merged_df_with_birth_year['animal_birthyear'].astype(int)
+
+    # Step 1: Calculate the total count of each name per year
+    name_counts = merged_df_with_birth_year.groupby(['animal_birthyear', 'animal_name']).size().reset_index(name='count')
+
+    # Step 2: Exclude specific names
+    name_counts = name_counts[~name_counts['animal_name'].isin(names_to_exclude)]
+
+    # Step 3: Calculate the percentage change
+    name_counts['percentage_change'] = name_counts.groupby('animal_name')['count'].pct_change()
+
+    # Step 4: Filter for rows with non-null percentage changes
+    name_changes = name_counts[name_counts['percentage_change'].notna()]
+
+    # Step 5: Identify the top 10 increases in popularity
+    top_increases = name_changes.sort_values(by='percentage_change', ascending=False).head(10)
+
+    # Step 6: Create a bar graph
+    plt.figure(figsize=(12, 6))
+    plt.barh(top_increases['animal_name'] + " (" + top_increases['animal_birthyear'].astype(str) + ")", 
+         top_increases['percentage_change'] * 100, color='skyblue')
+    plt.xlabel('Percentage Increase in Popularity (%)')
+    plt.title('Top 10 Most Increased Popularity of Animal Names')
+    plt.axvline(0, color='gray', linestyle='--')
+    plt.show()
+
+
+""" --- Gender neutral names  --- """
+
+def gender_natural_names():
+
+    # Group by 'animal_name' and 'animal_gender', count occurrences, drop "Dachshund" as name
+
+    name_gender_counts = merged_df.groupby(['animal_name', 'animal_gender']).size().unstack(fill_value=0)
+    name_gender_counts = name_gender_counts.drop('Dachshund', errors='ignore')
+    name_gender_counts = name_gender_counts.drop('.', errors='ignore')
+    name_gender_counts = name_gender_counts.drop('Shiba', errors='ignore')
+
+    # Calculate the difference between 'F' and 'M' counts
+    name_gender_counts['gender_difference'] = name_gender_counts['f'] - name_gender_counts['m']
+
+    # Calculate the total count ('all' column)
+    name_gender_counts['all_dogs'] = name_gender_counts['f'] + name_gender_counts['m']
+
+    # Filter for at least 30 dogs with a given name
+    name_gender_counts = name_gender_counts[name_gender_counts['all_dogs'] >= 45]
+
+
+    # Calculate the absolute difference between 'F' and 'M' counts
+    name_gender_counts['abs_difference'] = (name_gender_counts['f'] - name_gender_counts['m']).abs()
+
+    # Filter for small difference
+    name_gender_counts = name_gender_counts[name_gender_counts['abs_difference'] < 20]
+
+    # Sort by the absolute difference in ascending order to prioritize small differences
+    name_gender_counts = name_gender_counts.sort_values(by='all_dogs', ascending=False)
+
+    top_gender_neutral_names = name_gender_counts.head(10)
+
+    top_gender_neutral_names
+
+    #Make the graph
+    colors = sns.color_palette('Set2', len(top_increases))
+    top_gender_neutral_names[['f', 'm']].plot(kind='bar', figsize=(10, 6), color=colors)
+    plt.title('Top 10 Gender-Neutral Dog Names')
+    plt.xlabel('Dog Names')
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+    plt.legend(title='Gender')
+    plt.tight_layout()
+    plt.show()
+
+""" --- Colleration name/weight --- """
+
+def name_vs_weight():
+    #Exclude Name from names
+    merged_df = merged_df[merged_df['animal_name'] != "Name"]
+    
+    # Get the weight groups (names of the weight groups)
+    top_weight_groups = ["2 - 3", "7 - 8", "14 - 27", "23 - 41"]
+
+    # Filter the DataFrame to include only the top weight groups
+    top_weight_groups_df = merged_df[merged_df['weight'].isin(top_weight_groups)]
+
+    # Group by weight category and name, then count occurrences
+    name_counts_by_weight = top_weight_groups_df.groupby(['weight', 'animal_name']).size().reset_index(name='count')
+
+    # Find the top 5 names for each weight group
+    top_names_by_weight = name_counts_by_weight.groupby('weight').apply(lambda x: x.nlargest(5, 'count')).reset_index(drop=True)
+
+    # Create a color mapping for each weight group
+    unique_weight_groups = top_names_by_weight['weight'].unique()
+    colors = sns.color_palette('Set2', len(unique_weight_groups))  # Get a distinct color for each weight group
+    weight_color_mapping = dict(zip(unique_weight_groups, colors))  # Map weight groups to colors
+
+    # Plot the top names for each weight group with consistent colors
+    plt.figure(figsize=(14, 8))
+
+    # Loop through weight groups and plot each one with the assigned color
+    for weight_group in unique_weight_groups:
+        group_data = top_names_by_weight[top_names_by_weight['weight'] == weight_group]
+        plt.barh(group_data['animal_name'] + f" ({weight_group})", group_data['count'], color=weight_color_mapping[weight_group],             label=weight_group)
+
+    # Add grid lines for better readability
+    plt.grid(axis='x', linestyle='--', alpha=0.7)
+
+    # Add title and labels
+    plt.xlabel('Number of Dogs')
+    plt.ylabel('Dog Name')
+    plt.title('Top 5 Most Popular Dog Names in different Weight Groups')
+
+    #  Improve legend visibility
+    plt.legend(title='Weight Group', loc='upper right', bbox_to_anchor=(1.15, 1))
+
+    #Use tight layout for better spacing
+    plt.tight_layout()
+
+    # Show the plot
+    plt.show()
