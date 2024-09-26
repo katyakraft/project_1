@@ -3,11 +3,6 @@ import requests
 import pandas as pd
 from collections import Counter
 pd.set_option('display.max_rows', None)
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
-import seaborn.objects as so
-import re
 
 """ ---Functions for data collection--- """
 
@@ -50,7 +45,7 @@ def count_characteristics(df_breeds):
     """ This function picks the 5 most popular characteristics of dog breeds """    
     # Combine all characteristics into a single list
     all_characteristics = []
-    for characteristics in df_breeds["temperament"]:  
+    for characteristics in df_breeds["Temperament"]:  
         if isinstance(characteristics, str):
             all_characteristics.extend(characteristics.split(', '))
     
@@ -68,7 +63,7 @@ def add_columns(df_breeds, result_characteristics):
     """ This function adds new columns with boolean values of the 5 most popular characteristics """    
 
     for characteristic in result_characteristics.index:  
-        df_breeds[characteristic] = df_breeds['temperament'].str.contains(characteristic, case=False)
+        df_breeds[characteristic] = df_breeds['Temperament'].str.contains(characteristic, case=False)
 
     return df_breeds
 
@@ -170,43 +165,3 @@ def breed_groups(breedname):
         return 'chow chow'
     else:
        pass 
-        
-""" --- Name popularity over time --- """
-
-def popularity_overtime()
-
-    top_names = ["bella", "max", "charlie", "luna", "coco"]
-    #remove invalid birth years 
-    merged_df['animal_birthyear'] = pd.to_numeric(merged_df['animal_birthyear'], errors='coerce')
-    #create a copy with valid birth years
-    only_with_birthyear_df = merged_df.dropna(subset=['animal_birthyear'])
-    only_with_birthyear_df['animal_birthyear'] = pd.to_numeric(only_with_birthyear_df['animal_birthyear'].astype(int), errors='coerce')
-
-    # Normalize: group by year and stack to use name as index
-    result = only_with_birthyear_df[only_with_birthyear_df['animal_name'].isin(top_names)].groupby(['animal_name', 'animal_birthyear'])['animal_name'].count().unstack(fill_value=0)
-    # Filter the DataFrame for years from 2000
-    filtered_df = only_with_birthyear_df[only_with_birthyear_df['animal_birthyear'] >= 2000]
-
-    # Calculate total dogs registered per year for the filtered DataFrame
-    total_dogs_per_year = filtered_df.groupby('animal_birthyear')['animal_name'].count()
-
-
-    # Normalize the result DataFrame by the total number of dogs per year
-
-    normalized_result = (result / total_dogs_per_year) * 1000
-    
-    # Plot the normalized data
-    normalized_result.T.plot(figsize=(15, 8))
-    plt.title('Normalized Popularity of Animal Names Over Time (2000-2022)')
-    plt.xlabel('Year of Birth')
-    plt.ylabel('Normalized Count of Names (Relative to Total Dogs Registered)')
-    plt.xlim(2000, 2022)  # Keep the x-axis range the same
-    plt.ylim(0, 20)  # Set the y-axis limits
-
-    # Adjust the range 
-    plt.xticks(range(2000, 2022))  
-
-    plt.legend(title='Animal Names', bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    plt.show()
-
