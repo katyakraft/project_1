@@ -31,13 +31,16 @@ Data Cleaning and Preparation:
 -Data Enrichment: Fetching additional breed information using the Dog API to supplement the NYC dataset with detailed breed attributes.
 
 Analysis & Visualizations:
+
 1.Most Popular Dog Names:
 
   -Visualize the top names overall and by breed group.
   -Display yearly trends to see how name popularity has evolved over time.
+
 2.Top Names by Breed:
 
   -Analyze the top 3 names given to dogs in the top 5 most popular breeds.
+
 3.Correlation between Names & Characteristics:
 
   -Using the Dog API's breed characteristics (e.g., temperament), we explore potential links between a dog’s name and its expected behavior.
